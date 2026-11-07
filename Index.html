@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Amigo Secreto - Sala AMIGOSONDA</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
+  <script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
+</head>
+<body class="bg-slate-100 min-h-screen text-slate-800 pb-12">
+  <div class="max-w-md mx-auto p-4">
+    <header class="text-center my-6">
+      <h1 class="text-3xl font-extrabold text-indigo-600"><i class="fa-solid fa-gift mr-2"></i>Amigo Secreto</h1>
+      <p class="text-sm font-semibold text-slate-500 mt-1">Grupo: <span class="text-indigo-600 font-bold">AMIGOSONDA</span></p>
+    </header>
+
+    <div class="bg-white rounded-2xl shadow-lg p-5 border-2 border-indigo-100 mb-6">
+      <h2 class="text-xl font-bold text-indigo-600 mb-4"><i class="fa-solid fa-user-pen mr-2"></i>Meu Perfil & Preferências</h2>
+      <form id="form-perfil" class="space-y-3">
+        <div>
+          <label class="text-xs font-bold text-slate-600" for="nome">Seu Nome:</label>
+          <input type="text" id="nome" placeholder="Digite seu nome completo" required class="w-full p-3 border rounded-xl bg-slate-50">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-600" for="tel">Seu WhatsApp:</label>
+          <input type="tel" id="tel" placeholder="(84) 99999-8888" required class="w-full p-3 border rounded-xl bg-slate-50">
+        </div>
+        <div>
+          <label class="text-xs font-bold text-emerald-700" for="gosta">✨ O que você GOSTA de ganhar:</label>
+          <textarea id="gosta" placeholder="Ex: Camiseta M, chocolates, livros..." required class="w-full p-3 border rounded-xl bg-slate-50 h-20"></textarea>
+        </div>
+        <div>
+          <label class="text-xs font-bold text-rose-600" for="naoGosta">🚫 O que você NÃO GOSTA de ganhar:</label>
+          <textarea id="naoGosta" placeholder="Ex: Perfume forte, meias, coisas amarelas..." required class="w-full p-3 border rounded-xl bg-slate-50 h-20"></textarea>
+        </div>
+        <button type="submit" class="w-full bg-indigo-600 text-white py-3 rounded-xl font-bold hover:bg-indigo-700 shadow-md transition">
+          <i class="fa-solid fa-cloud-arrow-up mr-2"></i>Salvar Meu Perfil
+        </button>
+        <div id="msg-sucesso" class="hidden text-center bg-emerald-100 text-emerald-800 p-3 rounded-xl font-bold text-sm">
+          <i class="fa-solid fa-check-circle mr-1"></i> Perfil salvo com sucesso!
+        </div>
+      </form>
+    </div>
+
+    <div class="bg-white rounded-2xl shadow-lg p-5 mb-6">
+      <div class="flex justify-between items-center mb-4 gap-2">
+        <h2 class="text-xl font-bold text-indigo-600">
+          <i class="fa-solid fa-users mr-2"></i>Participantes (<span id="total-count">0</span>)
+        </h2>
+        <button type="button" onclick="alternarAdmin()" class="text-xs bg-slate-200 hover:bg-slate-300 text-slate-700 px-3 py-1.5 rounded-lg font-bold transition whitespace-nowrap">
+          <i class="fa-solid fa-lock" id="icon-lock"></i> Painel Organizador
+        </button>
+      </div>
+
+      <div id="lista-participantes" class="space-y-2 mb-6"></div>
+
+      <div id="painel-admin" class="hidden border-t-2 border-indigo-100 pt-5 mt-4 space-y-4">
+        <div class="bg-amber-50 border border-amber-200 p-3 rounded-xl text-xs text-amber-800 font-semibold">
+          <i class="fa-solid fa-triangle-exclamation mr-1"></i> Área restrita ao organizador. Aqui você vê telefones, gostos e pode realizar o sorteio.
+        </div>
+        <div id="lista-admin-detalhada" class="space-y-3"></div>
+        <button type="button" onclick="sortear()" class="w-full bg-emerald-600 text-white py-4 rounded-xl font-extrabold text-lg shadow-lg hover:bg-emerald-700 transition">
+          <i class="fa-solid fa-shuffle mr-2"></i> Realizar Sorteio do Grupo
+        </button>
+      </div>
+    </div>
+
+    <div id="area-sorteio" class="hidden bg-white rounded-2xl shadow-lg p-5">
+      <h2 class="text-xl font-bold mb-4 text-emerald-600"><i class="fa-solid fa-square-check mr-2"></i>Resultados do Sorteio</h2>
+      <div id="lista-sorteados" class="space-y-4"></div>
+    </div>
+  </div>
+
+  <script>
+    let db = null;
+    const salaAtual = "amigosonda";
+    let participantesLocais = JSON.parse(localStorage.getItem('sonda_participantes')) || {};
+    let adminAtivo = false;
+
+    // Para sincronização entre celulares, configure aqui seu próprio projeto Firebase.
+    // Sem configuração válida, o aplicativo funciona apenas neste navegador/dispositivo.
+    try {
+      const firebaseConfig = {
+        databaseURL: "https://amigo-secreto-demo-default-rtdb.firebaseio.com"
+      };
+      firebase.initializeApp(firebaseConfig);
+      db = firebase.database();
+    } catch (e) {
+      console.log("Modo offline ativado:", e);
+    }
+
+    function alternarAdmin() {
+      if (!adminAtivo) {
+        const senha = prompt("Digite a senha do organizador:");
+        if (senha === "sonda2026") {
+          adminAtivo = true;
+          document.getElementById('icon-lock').className = "fa-solid fa-lock-open text-emerald-600";
+          alert("Painel do Organizador desbloqueado!");
+        } else if (senha !== null) {
+          alert("Senha incorreta!");
+          return;
+        } else {
+          return;
+        }
+      } else {
+        adminAtivo = false;
+        document.getElementById('icon-lock').className = "fa-solid fa-lock";
+        alert("Painel do Organizador ocultado.");
+      }
+      renderizarTudo();
+    }
+
+    function escaparHTML(valor) {
+      return String(valor ?? '').replace(/[&<>"']/g, caractere => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      })[caractere]);
+    }
+
+    function renderizarTudo() {
+      const pArray = Object.values(participantesLocais);
+      document.getElementById('total-count').innerText = pArray.length;
+
+      const list = document.getElementById('lista-participantes');
+      const painelAdmin = document.getElementById('painel-admin');
+      const listAdmin = document.getElementById('lista-admin-detalhada');
+
+      if (pArray.length === 0) {
+        list.innerHTML = '<p class="text-sm text-slate-400 text-center py-4">Nenhum participante cadastrado ainda na sala <b>amigosonda</b>.</p>';
+        painelAdmin.classList.add('hidden');
+        return;
+      }
+
+      list.innerHTML = pArray.map(p => `
+        <div class="p-3 bg-slate-50 rounded-xl border border-slate-200 flex justify-between items-center">
+          <strong class="text-slate-700"><i class="fa-solid fa-user mr-2 text-indigo-500"></i>${escaparHTML(p.nome)}</strong>
+          <span class="text-xs bg-emerald-100 text-emerald-700 px-2.5 py-1 rounded-md font-semibold">Confirmado</span>
+        </div>
+      `).join('');
+
+      if (adminAtivo) {
+        painelAdmin.classList.remove('hidden');
+        listAdmin.innerHTML = pArray.map(p => `
+          <div class="p-3 bg-indigo-50/60 rounded-xl border border-indigo-200 text-xs space-y-1">
+            <p class="font-bold text-indigo-900 text-sm"><i class="fa-solid fa-user-shield mr-1"></i> ${escaparHTML(p.nome)} <span class="text-slate-500 font-normal">(${escaparHTML(p.tel)})</span></p>
+            <p><span class="font-bold text-emerald-700">Gosta:</span> ${escaparHTML(p.gosta)}</p>
+            <p><span class="font-bold text-rose-600">Não gosta:</span> ${escaparHTML(p.naoGosta)}</p>
+          </div>
+        `).join('');
+      } else {
+        painelAdmin.classList.add('hidden');
+      }
+    }
+
+    if (db) {
+      db.ref('salas/' + salaAtual + '/participantes').on('value', snapshot => {
+        const val = snapshot.val();
+        if (val) {
+          participantesLocais = val;
+          localStorage.setItem('sonda_participantes', JSON.stringify(val));
+        }
+        renderizarTudo();
+      }, error => {
+        console.warn("Não foi possível ler os dados do Firebase:", error);
+        renderizarTudo();
+      });
+    } else {
+      renderizarTudo();
+    }
+
+    document.getElementById('form-perfil').addEventListener('submit', e => {
+      e.preventDefault();
+      const nome = document.getElementById('nome').value.trim();
+      const tel = document.getElementById('tel').value.trim();
+      const gosta = document.getElementById('gosta').value.trim();
+      const naoGosta = document.getElementById('naoGosta').value.trim();
+
+      const pId = nome.toLowerCase().normalize("NFD").replace(/[\u0300-\u036f]/g, "").replace(/[^a-z0-9]/g, "_");
+      const novoPerfil = { id: pId, nome, tel, gosta, naoGosta };
+
+      participantesLocais[pId] = novoPerfil;
+      localStorage.setItem('sonda_participantes', JSON.stringify(participantesLocais));
+      renderizarTudo();
+
+      const msg = document.getElementById('msg-sucesso');
+      msg.classList.remove('hidden');
+      setTimeout(() => msg.classList.add('hidden'), 4000);
+      document.getElementById('form-perfil').reset();
+
+      if (db) {
+        db.ref('salas/' + salaAtual + '/participantes/' + pId).set(novoPerfil).catch(err => {
+          console.log("Erro ao sincronizar com nuvem, mantido local:", err);
+        });
+      }
+    });
+
+    function sortear() {
+      const pArray = Object.values(participantesLocais);
+      if (pArray.length < 3) {
+        alert('É necessário pelo menos 3 participantes cadastrados para realizar o sorteio!');
+        return;
+      }
+
+      let tirou = [...pArray];
+      let valido = false;
+      let tentativas = 0;
+      while (!valido && tentativas < 10000) {
+        // Fisher-Yates: embaralhamento uniforme.
+        for (let i = tirou.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [tirou[i], tirou[j]] = [tirou[j], tirou[i]];
+        }
+        valido = pArray.every((p, i) => p.id !== tirou[i].id);
+        tentativas++;
+      }
+      if (!valido) {
+        alert('Não foi possível gerar um sorteio válido. Tente novamente.');
+        return;
+      }
+
+      const resultado = pArray.map((p, i) => ({ de: p, para: tirou[i] }));
+
+      document.getElementById('area-sorteio').classList.remove('hidden');
+      const area = document.getElementById('lista-sorteados');
+      area.innerHTML = resultado.map(res => {
+        const mensagem = `Olá *${res.de.nome}*! 🎁\nSeu amigo secreto é: *${res.para.nome}*\n\n✨ *O que gosta de ganhar:*\n${res.para.gosta}\n\n🚫 *O que NÃO gosta de ganhar:*\n${res.para.naoGosta}`;
+        let cleanPhone = String(res.de.tel).replace(/\D/g, '');
+        if (!cleanPhone.startsWith('55')) cleanPhone = '55' + cleanPhone;
+        const linkWpp = `https://api.whatsapp.com/send?phone=${cleanPhone}&text=${encodeURIComponent(mensagem)}`;
+
+        return `
+          <div class="p-4 border border-indigo-100 rounded-xl bg-indigo-50/50">
+            <p class="font-bold text-slate-700">${escaparHTML(res.de.nome)}</p>
+            <p class="text-xs text-slate-500">Tirou: <span class="font-semibold text-indigo-600">${escaparHTML(res.para.nome)}</span></p>
+            <div class="mt-3">
+              <a href="${linkWpp}" target="_blank" rel="noopener noreferrer" class="block text-center bg-emerald-500 text-white py-2 rounded-lg text-sm font-bold shadow">
+                <i class="fa-brands fa-whatsapp"></i> Enviar Whats
+              </a>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+
+    renderizarTudo();
+  </script>
+</body>
+</html>
