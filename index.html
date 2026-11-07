@@ -83,7 +83,14 @@
     // Sem configuração válida, o aplicativo funciona apenas neste navegador/dispositivo.
     try {
       const firebaseConfig = {
-        databaseURL: "https://amigo-secreto-demo-default-rtdb.firebaseio.com"
+        apiKey: "AIzaSyAsqAstIkMCdTxoqTtug8b2JIrV1F1RyJk",
+        authDomain: "amigo-secreto-amigosonda.firebaseapp.com",
+        databaseURL: "https://amigo-secreto-amigosonda-default-rtdb.firebaseio.com",
+        projectId: "amigo-secreto-amigosonda",
+        storageBucket: "amigo-secreto-amigosonda.firebasestorage.app",
+        messagingSenderId: "362656426911",
+        appId: "1:362656426911:web:150bec9c610ce51dafebaa",
+        measurementId: "G-PC577PEMT5"
       };
       firebase.initializeApp(firebaseConfig);
       db = firebase.database();
