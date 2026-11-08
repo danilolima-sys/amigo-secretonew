@@ -1,116 +1,25 @@
 <!DOCTYPE html>
-<html lang="pt-BR">
-<head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Amigo Secreto — AMIGOSONDA</title>
-<script src="https://cdn.tailwindcss.com"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script>
-<script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script>
-</head>
-<body class="bg-slate-100 text-slate-800 min-h-screen">
-<main class="max-w-xl mx-auto p-4 space-y-5">
-<header class="text-center py-5"><h1 class="text-3xl font-black text-indigo-700">🎁 Amigo Secreto</h1><p class="font-bold text-indigo-500">AMIGOSONDA</p></header>
-<section class="bg-white rounded-2xl shadow p-5 space-y-3">
-<h2 class="font-bold text-xl">Meu cadastro</h2>
-<p id="status" class="text-sm text-slate-500">Conectando...</p>
-<form id="perfil" class="space-y-3">
-<input id="nome" class="w-full border rounded-xl p-3" placeholder="Nome completo" required>
-<input id="tel" class="w-full border rounded-xl p-3" placeholder="WhatsApp com DDD" required>
-<textarea id="gosta" class="w-full border rounded-xl p-3" placeholder="O que você gosta de ganhar?" required></textarea>
-<textarea id="naoGosta" class="w-full border rounded-xl p-3" placeholder="O que você não gosta de ganhar?" required></textarea>
-<button class="w-full bg-indigo-600 text-white rounded-xl p-3 font-bold">Salvar meu perfil</button>
-</form><p id="feedback" class="text-sm font-semibold"></p>
-</section>
-<section class="bg-white rounded-2xl shadow p-5 space-y-3">
-<div class="flex items-center justify-between gap-2"><h2 class="font-bold text-xl">Participantes</h2><span id="total" class="font-bold text-indigo-600">0</span></div>
-<div id="lista" class="space-y-2 text-sm"></div>
-</section>
-<section class="bg-white rounded-2xl shadow p-5 space-y-3">
-<h2 class="font-bold text-xl">Área do organizador</h2>
-<p class="text-sm text-slate-500">Entre com a conta Google autorizada do organizador.</p>
-<button id="loginGoogle" class="w-full bg-slate-800 text-white rounded-xl p-3 font-bold">Entrar como organizador com Google</button>
-<button id="sair" class="hidden w-full border rounded-xl p-3">Sair da conta Google</button>
-<p id="adminStatus" class="text-sm"></p>
-<div id="admin" class="hidden space-y-3"><div id="detalhes" class="space-y-2"></div><button id="sortear" class="w-full bg-emerald-600 text-white rounded-xl p-3 font-bold">Realizar sorteio e preparar WhatsApp</button><div id="resultados" class="space-y-3"></div></div>
-</section>
-</main>
+<html lang="pt-BR"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>AMIGOSONDA</title>
+<script src="https://cdn.tailwindcss.com"></script><script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-app-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-auth-compat.js"></script><script src="https://www.gstatic.com/firebasejs/9.22.1/firebase-database-compat.js"></script></head>
+<body class="bg-slate-100 text-slate-800"><main class="max-w-xl mx-auto p-4 space-y-5">
+<header class="text-center py-5"><h1 class="text-3xl font-black text-indigo-700">🎁 Amigo Secreto</h1><b class="text-indigo-500">AMIGOSONDA</b></header>
+<section class="bg-white rounded-2xl shadow p-5 space-y-3"><h2 class="font-bold text-xl">Cadastrar participante</h2><p id="status" class="text-sm text-slate-500">Conectando...</p><p class="text-xs text-slate-500">Pode cadastrar várias pessoas neste mesmo aparelho. Cada envio adiciona uma nova pessoa.</p>
+<form id="perfil" class="space-y-3"><input id="nome" class="w-full border rounded-xl p-3" placeholder="Nome completo" required><input id="tel" class="w-full border rounded-xl p-3" placeholder="WhatsApp com DDD" required><textarea id="gosta" class="w-full border rounded-xl p-3" placeholder="O que gosta de ganhar?" required></textarea><textarea id="naoGosta" class="w-full border rounded-xl p-3" placeholder="O que não gosta de ganhar?" required></textarea><button class="w-full bg-indigo-600 text-white rounded-xl p-3 font-bold">Adicionar participante</button></form><p id="feedback" class="text-sm font-semibold"></p></section>
+<section class="bg-white rounded-2xl shadow p-5 space-y-3"><div class="flex justify-between"><h2 class="font-bold text-xl">Participantes</h2><b id="total" class="text-indigo-600">0</b></div><div id="lista" class="space-y-2 text-sm"></div></section>
+<section class="bg-white rounded-2xl shadow p-5 space-y-3"><h2 class="font-bold text-xl">Área do organizador</h2><p class="text-sm text-slate-500">Entre com a conta Google autorizada.</p><button id="loginGoogle" class="w-full bg-slate-800 text-white rounded-xl p-3 font-bold">Entrar com Google</button><button id="sair" class="hidden w-full border rounded-xl p-3">Sair</button><p id="adminStatus" class="text-sm"></p><div id="admin" class="hidden space-y-3"><h3 class="font-bold">Gerenciar participantes</h3><div id="detalhes" class="space-y-2"></div><button id="sortear" class="w-full bg-emerald-600 text-white rounded-xl p-3 font-bold">Realizar sorteio e preparar WhatsApp</button><div id="resultados" class="space-y-3"></div></div></section></main>
 <script>
-const firebaseConfig = {
- apiKey:"AIzaSyAsqAstIkMCdTxoqTtug8b2JIrV1F1RyJk",
- authDomain:"amigo-secreto-amigosonda.firebaseapp.com",
- databaseURL:"https://amigo-secreto-amigosonda-default-rtdb.firebaseio.com",
- projectId:"amigo-secreto-amigosonda",
- storageBucket:"amigo-secreto-amigosonda.firebasestorage.app",
- messagingSenderId:"362656426911",
- appId:"1:362656426911:web:150bec9c610ce51dafebaa",
- measurementId:"G-PC577PEMT5"
-};
-firebase.initializeApp(firebaseConfig);
-const auth=firebase.auth(), db=firebase.database(), base="salas/amigosonda";
-const ADMIN="danilolimaklove@gmail.com";
-let currentUser=null, isAdmin=false, publicos={}, privados={};
-const $=id=>document.getElementById(id);
+const firebaseConfig={apiKey:"AIzaSyAsqAstIkMCdTxoqTtug8b2JIrV1F1RyJk",authDomain:"amigo-secreto-amigosonda.firebaseapp.com",databaseURL:"https://amigo-secreto-amigosonda-default-rtdb.firebaseio.com",projectId:"amigo-secreto-amigosonda",storageBucket:"amigo-secreto-amigosonda.firebasestorage.app",messagingSenderId:"362656426911",appId:"1:362656426911:web:150bec9c610ce51dafebaa",measurementId:"G-PC577PEMT5"};
+firebase.initializeApp(firebaseConfig);const auth=firebase.auth(),db=firebase.database(),base="salas/amigosonda",ADMIN="danilolimaklove@gmail.com";
+let currentUser=null,isAdmin=false,publicos={},privados={};const $=id=>document.getElementById(id);
 const safe=s=>String(s??"").replace(/[&<>"']/g,c=>({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
-auth.onAuthStateChanged(async user=>{
- currentUser=user;
- if(!user){ try{await auth.signInAnonymously();}catch(e){$("status").textContent="Falha no login: "+e.message;} return; }
- isAdmin=!!(user.email===ADMIN && user.emailVerified);
- $("status").textContent=isAdmin?"Organizador conectado.": "Conectado para participar.";
- $("admin").classList.toggle("hidden",!isAdmin);
- $("sair").classList.toggle("hidden",!isAdmin);
- $("loginGoogle").classList.toggle("hidden",isAdmin);
-});
-$("loginGoogle").onclick=async()=>{
- try{const p=new firebase.auth.GoogleAuthProvider(); await auth.signInWithPopup(p);}
- catch(e){$("adminStatus").textContent="Não foi possível entrar: "+e.message;}
-};
+function flatten(tree){let a=[];Object.entries(tree||{}).forEach(([owner,node])=>{if(node&&node.nome)a.push({...node,ownerUid:owner,participantId:node.participantId||owner});else Object.entries(node||{}).forEach(([id,p])=>{if(p)a.push({...p,ownerUid:owner,participantId:id});});});return a;}
+auth.onAuthStateChanged(async u=>{currentUser=u;if(!u){try{await auth.signInAnonymously();}catch(e){$("status").textContent="Falha no login: "+e.message;}return;}isAdmin=u.email===ADMIN&&u.emailVerified;$("status").textContent=isAdmin?"Organizador conectado.":"Conectado para participar.";$("admin").classList.toggle("hidden",!isAdmin);$("sair").classList.toggle("hidden",!isAdmin);$("loginGoogle").classList.toggle("hidden",isAdmin);renderAdmin();});
+$("loginGoogle").onclick=async()=>{try{await auth.signInWithPopup(new firebase.auth.GoogleAuthProvider());}catch(e){$("adminStatus").textContent="Falha no login: "+e.message;}};
 $("sair").onclick=()=>auth.signOut();
-db.ref(base+"/participantesPublicos").on("value",s=>{
- publicos=s.val()||{}; renderPublicos();
-});
-function renderPublicos(){
- const arr=Object.values(publicos); $("total").textContent=arr.length;
- $("lista").innerHTML=arr.length?arr.map(p=>`<div class="p-3 bg-slate-50 rounded-lg">${safe(p.nome)} <span class="text-emerald-600">• confirmado</span></div>`).join(""):"Ainda não há participantes.";
-}
-$("perfil").addEventListener("submit",async e=>{
- e.preventDefault(); if(!currentUser){$("feedback").textContent="Aguarde a conexão.";return;}
- const uid=currentUser.uid, nome=$("nome").value.trim();
- const data={uid,nome,tel:$("tel").value.trim(),gosta:$("gosta").value.trim(),naoGosta:$("naoGosta").value.trim()};
- try{
-  const updates={}; updates[base+"/participantesPublicos/"+uid]={uid,nome}; updates[base+"/perfisPrivados/"+uid]=data;
-  await db.ref().update(updates); $("feedback").textContent="Perfil salvo com sucesso!";
- }catch(err){$("feedback").textContent="Erro ao salvar: "+err.message;}
-});
-db.ref(base+"/perfisPrivados").on("value",s=>{
- if(isAdmin){privados=s.val()||{}; renderAdmin();}
-},e=>{$("adminStatus").textContent="Aguardando acesso de organizador.";});
-function renderAdmin(){
- if(!isAdmin)return;
- const arr=Object.values(privados); $("detalhes").innerHTML=arr.map(p=>`<article class="bg-indigo-50 p-3 rounded-xl text-sm"><b>${safe(p.nome)}</b> — ${safe(p.tel)}<p><b>Gosta:</b> ${safe(p.gosta)}</p><p><b>Não gosta:</b> ${safe(p.naoGosta)}</p></article>`).join("");
-}
-$("sortear").onclick=async()=>{
- const arr=Object.values(privados);
- if(arr.length<3){alert("Cadastre pelo menos 3 participantes.");return;}
- let shuffled,ok=false;
- for(let t=0;t<10000&&!ok;t++){
-  shuffled=[...arr];
-  for(let i=shuffled.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[shuffled[i],shuffled[j]]=[shuffled[j],shuffled[i]];}
-  ok=arr.every((p,i)=>p.uid!==shuffled[i].uid);
- }
- if(!ok){alert("Não foi possível sortear. Tente novamente.");return;}
- const updates={}, links=[];
- arr.forEach((p,i)=>{
-  const sorteado=shuffled[i];
-  updates[base+"/resultados/"+p.uid]={uid:p.uid,nomeSorteado:sorteado.nome,gosta:sorteado.gosta,naoGosta:sorteado.naoGosta};
-  let phone=p.tel.replace(/\D/g,""); if(!phone.startsWith("55"))phone="55"+phone;
-  const msg=`Olá ${p.nome}! 🎁 Seu amigo secreto é: ${sorteado.nome}\\n\\nO que gosta: ${sorteado.gosta}\\nO que não gosta: ${sorteado.naoGosta}`;
-  links.push({nome:p.nome,phone,msg});
- });
- try{
-  await db.ref().update(updates);
-  $("resultados").innerHTML=links.map(x=>`<div class="border rounded-xl p-3"><b>${safe(x.nome)}</b><p class="text-sm text-slate-600">Resultado gravado com segurança.</p><a class="block text-center bg-emerald-600 text-white p-2 rounded-lg mt-2" target="_blank" rel="noopener" href="https://wa.me/${x.phone}?text=${encodeURIComponent(x.msg)}">Enviar resultado pelo WhatsApp</a></div>`).join("");
-  alert("Sorteio salvo! Use os links para enviar individualmente.");
- }catch(e){alert("Erro ao salvar o sorteio: "+e.message);}
-};
+db.ref(base+"/participantesPublicos").on("value",s=>{publicos=s.val()||{};let a=flatten(publicos);$("total").textContent=a.length;$("lista").innerHTML=a.length?a.map(p=>`<div class="p-3 bg-slate-50 rounded-lg">${safe(p.nome)} <span class="text-emerald-600">• confirmado</span></div>`).join(""):"Ainda não há participantes.";});
+$("perfil").onsubmit=async e=>{e.preventDefault();if(!currentUser)return;let uid=currentUser.uid,id=db.ref(base+"/perfisPrivados/"+uid).push().key,nome=$("nome").value.trim(),p={uid,participantId:id,nome,tel:$("tel").value.trim(),gosta:$("gosta").value.trim(),naoGosta:$("naoGosta").value.trim()};try{let u={};u[base+"/participantesPublicos/"+uid+"/"+id]={uid,participantId:id,nome};u[base+"/perfisPrivados/"+uid+"/"+id]=p;await db.ref().update(u);$("feedback").textContent="Participante adicionado! Cadastre o próximo.";e.target.reset();$("nome").focus();}catch(err){$("feedback").textContent="Erro ao salvar: "+err.message;}};
+db.ref(base+"/perfisPrivados").on("value",s=>{privados=s.val()||{};renderAdmin();},e=>{$("adminStatus").textContent="Erro ao carregar: "+e.message;});
+function renderAdmin(){if(!isAdmin)return;let a=flatten(privados);$("detalhes").innerHTML=a.length?a.map(p=>`<article class="bg-indigo-50 p-3 rounded-xl text-sm"><div class="flex justify-between gap-2"><b>${safe(p.nome)}</b><button class="excluir bg-rose-600 text-white px-3 py-1 rounded-lg text-xs" data-owner="${safe(p.ownerUid)}" data-id="${safe(p.participantId)}">Excluir</button></div><p>${safe(p.tel)}</p><p><b>Gosta:</b> ${safe(p.gosta)}</p><p><b>Não gosta:</b> ${safe(p.naoGosta)}</p></article>`).join(""):"Nenhum participante cadastrado.";document.querySelectorAll(".excluir").forEach(b=>b.onclick=()=>excluir(b.dataset.owner,b.dataset.id));}
+async function excluir(owner,id){let p=(privados[owner]||{})[id]||privados[owner];if(!confirm("Excluir "+(p?.nome||"participante")+"?"))return;try{let u={};u[base+"/participantesPublicos/"+owner+"/"+id]=null;u[base+"/perfisPrivados/"+owner+"/"+id]=null;u[base+"/resultados/"+id]=null;if(owner===id){u[base+"/participantesPublicos/"+owner]=null;u[base+"/perfisPrivados/"+owner]=null;u[base+"/resultados/"+owner]=null;}await db.ref().update(u);$("adminStatus").textContent="Participante excluído.";}catch(e){$("adminStatus").textContent="Erro ao excluir: "+e.message;}}
+$("sortear").onclick=async()=>{let a=flatten(privados);if(a.length<3){alert("Cadastre pelo menos 3 participantes.");return;}let b,ok=false;for(let t=0;t<10000&&!ok;t++){b=[...a];for(let i=b.length-1;i>0;i--){let j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}ok=a.every((p,i)=>p.participantId!==b[i].participantId);}if(!ok){alert("Não foi possível sortear.");return;}let u={},links=[];a.forEach((p,i)=>{let q=b[i];u[base+"/resultados/"+p.participantId]={participantId:p.participantId,nomeSorteado:q.nome,gosta:q.gosta,naoGosta:q.naoGosta};let tel=String(p.tel||"").replace(/\D/g,"");if(!tel.startsWith("55"))tel="55"+tel;let msg=`Olá ${p.nome}! 🎁 Seu amigo secreto é: ${q.nome}\n\nO que gosta: ${q.gosta}\nO que não gosta: ${q.naoGosta}`;links.push({nome:p.nome,tel,msg});});try{await db.ref().update(u);$("resultados").innerHTML=links.map(x=>`<div class="border rounded-xl p-3"><b>${safe(x.nome)}</b><a class="block text-center bg-emerald-600 text-white p-2 rounded-lg mt-2" target="_blank" rel="noopener" href="https://wa.me/${x.tel}?text=${encodeURIComponent(x.msg)}">Enviar resultado pelo WhatsApp</a></div>`).join("");alert("Sorteio salvo! Envie individualmente pelos links.");}catch(e){alert("Erro ao salvar sorteio: "+e.message);}};
 </script></body></html>
